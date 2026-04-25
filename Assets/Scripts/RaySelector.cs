@@ -21,11 +21,16 @@ public class RaySelector : MonoBehaviour
     [SerializeField] private Material selectedMaterial;
 
     private LineRenderer ray;
-    private GameObject hoveredObject;
-    private GameObject selectedObject;
 
-    // Remember each object's original material so we can restore it.
+    // What the ray is currently pointing at this frame (null if nothing tagged).
+    private GameObject currentRayTarget;
+
+    // What's currently being hovered (orange material applied).
+    private GameObject hoveredObject;
     private Material hoveredOriginalMat;
+
+    // What's currently selected (green material applied).
+    private GameObject selectedObject;
     private Material selectedOriginalMat;
 
     public GameObject SelectedObject => selectedObject;
@@ -53,32 +58,36 @@ public class RaySelector : MonoBehaviour
         Vector3 direction = rayOrigin.forward;
         Vector3 rayEnd = origin + direction * maxDistance;
 
-        GameObject newHover = null;
+        GameObject rayTarget = null;
 
         if (Physics.Raycast(origin, direction, out RaycastHit hit, maxDistance, selectableLayers))
         {
             rayEnd = hit.point;
             if (hit.collider.CompareTag(selectableTag))
-                newHover = hit.collider.gameObject;
+                rayTarget = hit.collider.gameObject;
         }
 
-        // Update line renderer to draw to whatever the ray hit (or to max distance).
         ray.SetPosition(0, origin);
         ray.SetPosition(1, rayEnd);
 
-        // Update hover state if we're now hovering a different object.
+        // Hover only when the ray target is a selectable that isn't already selected.
+        GameObject newHover = (rayTarget != null && rayTarget != selectedObject) ? rayTarget : null;
+
         if (newHover != hoveredObject)
         {
             ClearHover();
             hoveredObject = newHover;
             ApplyHover();
         }
+
+        // Track the raw ray target separately so trigger logic can act on it
+        // even when no hover material is applied (e.g., aiming at the selected object).
+        currentRayTarget = rayTarget;
     }
 
     private void ApplyHover()
     {
         if (hoveredObject == null) return;
-        if (hoveredObject == selectedObject) return; // Don't re-color what's already selected.
 
         var renderer = hoveredObject.GetComponent<Renderer>();
         if (renderer == null) return;
@@ -90,7 +99,6 @@ public class RaySelector : MonoBehaviour
     private void ClearHover()
     {
         if (hoveredObject == null) return;
-        if (hoveredObject == selectedObject) { hoveredObject = null; return; }
 
         var renderer = hoveredObject.GetComponent<Renderer>();
         if (renderer != null && hoveredOriginalMat != null)
@@ -102,28 +110,43 @@ public class RaySelector : MonoBehaviour
 
     private void ConfirmSelection()
     {
-        // Deselect previous.
-        if (selectedObject != null)
+        // Case 1: triggered while aiming at the currently-selected object → deselect.
+        if (currentRayTarget != null && currentRayTarget == selectedObject)
         {
-            var prevRenderer = selectedObject.GetComponent<Renderer>();
-            if (prevRenderer != null && selectedOriginalMat != null)
-                prevRenderer.material = selectedOriginalMat;
+            DeselectCurrent();
+            return;
         }
 
-        selectedObject = hoveredObject;
-        selectedOriginalMat = null;
+        // Case 2: triggered on a different selectable, or on nothing.
+        DeselectCurrent();
 
+        if (currentRayTarget == null) return;
+
+        var renderer = currentRayTarget.GetComponent<Renderer>();
+        if (renderer == null) return;
+
+        selectedObject = currentRayTarget;
+
+        // hoveredOriginalMat was set when the ray entered this object earlier this frame
+        // (or earlier). If for some reason it's null, fall back to the renderer's current material.
+        selectedOriginalMat = hoveredOriginalMat != null ? hoveredOriginalMat : renderer.sharedMaterial;
+
+        renderer.material = selectedMaterial;
+
+        // Hover is consumed by the selection.
+        hoveredObject = null;
+        hoveredOriginalMat = null;
+    }
+
+    private void DeselectCurrent()
+    {
         if (selectedObject == null) return;
 
         var renderer = selectedObject.GetComponent<Renderer>();
-        if (renderer == null) return;
+        if (renderer != null && selectedOriginalMat != null)
+            renderer.material = selectedOriginalMat;
 
-        // The hover state was already overriding the material; the truly original is what we stashed.
-        selectedOriginalMat = hoveredOriginalMat;
-        renderer.material = selectedMaterial;
-
-        // Hover is now subsumed into selection — clear hover tracking but don't restore the material.
-        hoveredObject = null;
-        hoveredOriginalMat = null;
+        selectedObject = null;
+        selectedOriginalMat = null;
     }
 }
