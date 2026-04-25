@@ -4,7 +4,7 @@ using UnityEngine.InputSystem;
 public class Manipulator : MonoBehaviour
 {
     [Header("Scene References")]
-    [Tooltip("Selector that tells us which object is currently selected.")]
+    [Tooltip("Selector that tells us which object is currently selected via ray.")]
     [SerializeField] private RaySelector selector;
 
     [Tooltip("Right controller (primary grab hand).")]
@@ -12,6 +12,9 @@ public class Manipulator : MonoBehaviour
 
     [Tooltip("Left controller (used for two-handed scaling).")]
     [SerializeField] private Transform leftHand;
+
+    [Tooltip("Optional: direct-touch grab sensor on the right hand. If set, falls back to grabbing whatever is overlapping when no ray-selected object exists.")]
+    [SerializeField] private DirectGrabSensor directSensor;
 
     [Header("Input")]
     [SerializeField] private InputActionReference rightGrip;
@@ -76,7 +79,13 @@ public class Manipulator : MonoBehaviour
 
     private void TryStartGrab()
     {
-        var target = selector.SelectedObject;
+        // Direct touch takes priority — if hand is physically on something, grab that.
+        GameObject target = directSensor != null ? directSensor.ClosestSelectable : null;
+
+        // Otherwise, fall back to ray-selected object.
+        if (target == null && selector != null)
+            target = selector.SelectedObject;
+
         if (target == null) return;
 
         grabbed = target.transform;
@@ -85,10 +94,9 @@ public class Manipulator : MonoBehaviour
         if (grabbedRb != null)
         {
             grabbedWasKinematic = grabbedRb.isKinematic;
-            grabbedRb.isKinematic = true; // pause physics while held
+            grabbedRb.isKinematic = true;
         }
 
-        // Capture relative pose: where the object sits relative to the hand right now.
         grabPositionOffset = Quaternion.Inverse(rightHand.rotation) * (grabbed.position - rightHand.position);
         grabRotationOffset = Quaternion.Inverse(rightHand.rotation) * grabbed.rotation;
 
