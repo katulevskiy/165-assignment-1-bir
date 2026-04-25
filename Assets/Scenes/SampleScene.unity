@@ -931,6 +931,7 @@ GameObject:
   - component: {fileID: 734588259}
   - component: {fileID: 734588261}
   - component: {fileID: 734588260}
+  - component: {fileID: 734588262}
   m_Layer: 0
   m_Name: LocomotionSystem
   m_TagString: Untagged
@@ -1090,6 +1091,26 @@ LineRenderer:
   m_UseWorldSpace: 1
   m_Loop: 0
   m_ApplyActiveColorSpace: 1
+--- !u!114 &734588262
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 734588258}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 86c611a7bfa97fa229be14c3c72bd027, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Manipulator
+  selector: {fileID: 1738325400}
+  rightHand: {fileID: 1738325397}
+  leftHand: {fileID: 1238971784}
+  rightGrip: {fileID: -1758520528963094988, guid: 5fbd4add7bdbfc6159da9aec502cb098, type: 3}
+  leftGrip: {fileID: 6558622148059887818, guid: 5fbd4add7bdbfc6159da9aec502cb098, type: 3}
+  gripThreshold: 0.5
+  minScale: 0.1
+  maxScale: 5
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0
