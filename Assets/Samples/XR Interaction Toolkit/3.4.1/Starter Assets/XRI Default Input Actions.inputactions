@@ -1306,6 +1306,17 @@
                     "action": "Spawn",
                     "isComposite": false,
                     "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "a488da94-f4c8-44ab-ae8b-40ed6574cdf4",
+                    "path": "<XRSimulatedController>{LeftHand}/primaryButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Spawn",
+                    "isComposite": false,
+                    "isPartOfComposite": false
                 }
             ]
         },
