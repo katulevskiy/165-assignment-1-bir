@@ -34,13 +34,20 @@ public class DirectGrabSensor : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
+        Debug.Log($"[DirectGrabSensor] OnTriggerEnter: {other.name}, tag={other.tag}");
         if (other.CompareTag(selectableTag))
+        {
             overlapping.Add(other.gameObject);
+            Debug.Log($"[DirectGrabSensor] Added {other.name}. Now overlapping: {overlapping.Count}");
+        }
     }
 
     private void OnTriggerExit(Collider other)
     {
         if (other.CompareTag(selectableTag))
+        {
             overlapping.Remove(other.gameObject);
+            Debug.Log($"[DirectGrabSensor] Removed {other.name}. Now overlapping: {overlapping.Count}");
+        }
     }
 }

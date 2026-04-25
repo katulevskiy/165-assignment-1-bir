@@ -13,7 +13,7 @@ public class Manipulator : MonoBehaviour
     [Tooltip("Left controller (used for two-handed scaling).")]
     [SerializeField] private Transform leftHand;
 
-    [Tooltip("Optional: direct-touch grab sensor on the right hand. If set, falls back to grabbing whatever is overlapping when no ray-selected object exists.")]
+    [Tooltip("Optional: direct-touch grab sensor on the right hand. If set, takes priority over ray selection when overlapping a Selectable.")]
     [SerializeField] private DirectGrabSensor directSensor;
 
     [Header("Input")]
@@ -32,8 +32,8 @@ public class Manipulator : MonoBehaviour
     private bool grabbedWasKinematic;
 
     // Offsets captured at the moment of grab, so the object doesn't snap to the controller.
-    private Vector3 grabPositionOffset;   // object pos relative to right hand at grab time
-    private Quaternion grabRotationOffset; // object rot relative to right hand at grab time
+    private Vector3 grabPositionOffset;
+    private Quaternion grabRotationOffset;
 
     // Two-handed scaling state
     private bool isScaling;
@@ -57,7 +57,6 @@ public class Manipulator : MonoBehaviour
         bool rightDown = rightGrip.action.ReadValue<float>() > gripThreshold;
         bool leftDown = leftGrip.action.ReadValue<float>() > gripThreshold;
 
-        // Handle grab start/stop based on right grip.
         if (rightDown && !isGrabbing)
             TryStartGrab();
         else if (!rightDown && isGrabbing)
@@ -65,10 +64,8 @@ public class Manipulator : MonoBehaviour
 
         if (!isGrabbing) return;
 
-        // Right hand drives translation + rotation.
         UpdateGrabTransform();
 
-        // Left grip while grabbing → enter / update / exit two-handed scale mode.
         if (leftDown && !isScaling)
             StartScaling();
         else if (leftDown && isScaling)
@@ -79,14 +76,19 @@ public class Manipulator : MonoBehaviour
 
     private void TryStartGrab()
     {
-        // Direct touch takes priority — if hand is physically on something, grab that.
-        GameObject target = directSensor != null ? directSensor.ClosestSelectable : null;
+        GameObject sensorTarget = directSensor != null ? directSensor.ClosestSelectable : null;
+        GameObject rayTarget = selector != null ? selector.SelectedObject : null;
 
-        // Otherwise, fall back to ray-selected object.
-        if (target == null && selector != null)
-            target = selector.SelectedObject;
+        Debug.Log($"[Manipulator] TryStartGrab: sensor={(sensorTarget != null ? sensorTarget.name : "null")}, ray={(rayTarget != null ? rayTarget.name : "null")}");
 
-        if (target == null) return;
+        // Direct touch takes priority — if the hand is physically on something, grab that.
+        GameObject target = sensorTarget != null ? sensorTarget : rayTarget;
+
+        if (target == null)
+        {
+            Debug.Log("[Manipulator] No target found, aborting grab.");
+            return;
+        }
 
         grabbed = target.transform;
         grabbedRb = grabbed.GetComponent<Rigidbody>();
@@ -107,7 +109,6 @@ public class Manipulator : MonoBehaviour
     {
         if (grabbed == null) { isGrabbing = false; return; }
 
-        // Apply the captured offset so rotation of the hand rotates the object around its grab point.
         grabbed.position = rightHand.position + rightHand.rotation * grabPositionOffset;
         grabbed.rotation = rightHand.rotation * grabRotationOffset;
     }
@@ -129,7 +130,7 @@ public class Manipulator : MonoBehaviour
         if (grabbed == null) return;
 
         initialHandDistance = Vector3.Distance(rightHand.position, leftHand.position);
-        if (initialHandDistance < 0.001f) initialHandDistance = 0.001f; // avoid divide-by-zero
+        if (initialHandDistance < 0.001f) initialHandDistance = 0.001f;
         initialScale = grabbed.localScale;
         isScaling = true;
     }
@@ -142,7 +143,6 @@ public class Manipulator : MonoBehaviour
         float ratio = currentDistance / initialHandDistance;
 
         Vector3 newScale = initialScale * ratio;
-        // Clamp to keep things sane.
         float clamped = Mathf.Clamp(newScale.x, minScale, maxScale);
         grabbed.localScale = new Vector3(clamped, clamped, clamped);
     }
