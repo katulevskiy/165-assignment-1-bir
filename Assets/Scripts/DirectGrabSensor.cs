@@ -5,7 +5,7 @@ public class DirectGrabSensor : MonoBehaviour
 {
     [SerializeField] private string selectableTag = "Selectable";
 
-    // Objects currently inside the trigger sphere.
+    // objects inside trigger sphere.
     private readonly HashSet<GameObject> overlapping = new();
 
     public GameObject ClosestSelectable

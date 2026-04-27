@@ -72,7 +72,6 @@ public class SpawnMenu : MonoBehaviour
         var prefab = spawnPrefabs[currentIndex];
         if (prefab == null) return;
 
-        // Spawn slightly in front of the spawn point so it doesn't appear inside the user's hand.
         Vector3 pos = spawnPoint.position + spawnPoint.forward * spawnForwardOffset;
         Instantiate(prefab, pos, Quaternion.identity);
     }

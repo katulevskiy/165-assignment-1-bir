@@ -25,17 +25,15 @@ public class Manipulator : MonoBehaviour
     [SerializeField] private float minScale = 0.1f;
     [SerializeField] private float maxScale = 5f;
 
-    // State while grabbing
     private bool isGrabbing;
     private Transform grabbed;
     private Rigidbody grabbedRb;
     private bool grabbedWasKinematic;
 
-    // Offsets captured at the moment of grab, so the object doesn't snap to the controller.
     private Vector3 grabPositionOffset;
     private Quaternion grabRotationOffset;
 
-    // Two-handed scaling state
+    // two-handed scaling
     private bool isScaling;
     private float initialHandDistance;
     private Vector3 initialScale;
@@ -81,7 +79,6 @@ public class Manipulator : MonoBehaviour
 
         Debug.Log($"[Manipulator] TryStartGrab: sensor={(sensorTarget != null ? sensorTarget.name : "null")}, ray={(rayTarget != null ? rayTarget.name : "null")}");
 
-        // Direct touch takes priority — if the hand is physically on something, grab that.
         GameObject target = sensorTarget != null ? sensorTarget : rayTarget;
 
         if (target == null)

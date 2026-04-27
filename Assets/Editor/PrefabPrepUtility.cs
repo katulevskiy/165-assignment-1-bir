@@ -2,6 +2,8 @@ using UnityEditor;
 using UnityEngine;
 using System.IO;
 
+// AI HELPED MAKE THIS UTILITY FILE THAT PREPARES THE MEDICAL EQUIPMENT MODELS AS PREFABS BY ADDING COLLIDERS, RIGIDBODIES, AND TAGS.
+
 public class PrefabPrepUtility : EditorWindow
 {
     [MenuItem("Tools/Prep Medical Equipment Prefabs")]

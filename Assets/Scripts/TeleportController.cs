@@ -24,7 +24,7 @@ public class TeleportController : MonoBehaviour
     [SerializeField] private float gravity = 9.81f;
     [SerializeField] private int maxSteps = 60;
     [SerializeField] private float stepTime = 0.05f;
-    [SerializeField] private float floorDotThreshold = 0.7f; // 0.7 ~ surfaces within ~45° of horizontal
+    [SerializeField] private float floorDotThreshold = 0.7f;
     [SerializeField] private LayerMask teleportableLayers = ~0;
 
     [Header("Snap Turn")]
@@ -91,14 +91,12 @@ public class TeleportController : MonoBehaviour
         for (int i = 1; i <= maxSteps; i++)
         {
             float t = i * stepTime;
-            // Standard projectile equation: p = p0 + v0*t + 0.5*a*t^2
             Vector3 next = origin + velocity * t + 0.5f * Vector3.down * gravity * (t * t);
 
             if (Physics.Linecast(prev, next, out RaycastHit hit, teleportableLayers))
             {
                 points.Add(hit.point);
 
-                // Only floors count as valid targets — surface normal must point roughly up.
                 if (Vector3.Dot(hit.normal, Vector3.up) > floorDotThreshold)
                 {
                     teleportTarget = hit.point;
@@ -118,9 +116,6 @@ public class TeleportController : MonoBehaviour
 
     private void ExecuteTeleport()
     {
-        // The camera sits at an offset from the XR Origin (because of room-scale tracking
-        // and the user's physical position). We want the camera to land at the target,
-        // not the origin. So subtract the horizontal camera offset from the target.
         Vector3 cameraOffsetFromOrigin = xrCamera.position - xrOrigin.position;
         cameraOffsetFromOrigin.y = 0f;
 
@@ -133,14 +128,13 @@ public class TeleportController : MonoBehaviour
 
         if (Mathf.Abs(stick.x) < snapTurnDeadzone)
         {
-            snapTurnReady = true; // Stick centered; ready for next flick
+            snapTurnReady = true;
             return;
         }
 
         if (!snapTurnReady) return;
 
         float angle = stick.x > 0 ? snapTurnAngle : -snapTurnAngle;
-        // Rotate around the camera so the user pivots in place.
         xrOrigin.RotateAround(xrCamera.position, Vector3.up, angle);
         snapTurnReady = false;
     }

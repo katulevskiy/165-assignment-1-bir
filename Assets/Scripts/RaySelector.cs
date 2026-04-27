@@ -22,14 +22,11 @@ public class RaySelector : MonoBehaviour
 
     private LineRenderer ray;
 
-    // What the ray is currently pointing at this frame (null if nothing tagged).
     private GameObject currentRayTarget;
 
-    // What's currently being hovered (orange material applied).
     private GameObject hoveredObject;
     private Material hoveredOriginalMat;
 
-    // What's currently selected (green material applied).
     private GameObject selectedObject;
     private Material selectedOriginalMat;
 
@@ -70,7 +67,6 @@ public class RaySelector : MonoBehaviour
         ray.SetPosition(0, origin);
         ray.SetPosition(1, rayEnd);
 
-        // Hover only when the ray target is a selectable that isn't already selected.
         GameObject newHover = (rayTarget != null && rayTarget != selectedObject) ? rayTarget : null;
 
         if (newHover != hoveredObject)
@@ -80,8 +76,6 @@ public class RaySelector : MonoBehaviour
             ApplyHover();
         }
 
-        // Track the raw ray target separately so trigger logic can act on it
-        // even when no hover material is applied (e.g., aiming at the selected object).
         currentRayTarget = rayTarget;
     }
 
@@ -110,14 +104,14 @@ public class RaySelector : MonoBehaviour
 
     private void ConfirmSelection()
     {
-        // Case 1: triggered while aiming at the currently-selected object → deselect.
+        // aiming at selected object - deselect.
         if (currentRayTarget != null && currentRayTarget == selectedObject)
         {
             DeselectCurrent();
             return;
         }
 
-        // Case 2: triggered on a different selectable, or on nothing.
+        // different selectable or on nothing.
         DeselectCurrent();
 
         if (currentRayTarget == null) return;
@@ -126,14 +120,11 @@ public class RaySelector : MonoBehaviour
         if (renderer == null) return;
 
         selectedObject = currentRayTarget;
-
-        // hoveredOriginalMat was set when the ray entered this object earlier this frame
-        // (or earlier). If for some reason it's null, fall back to the renderer's current material.
         selectedOriginalMat = hoveredOriginalMat != null ? hoveredOriginalMat : renderer.sharedMaterial;
 
         renderer.material = selectedMaterial;
 
-        // Hover is consumed by the selection.
+        // hover consumed by selection.
         hoveredObject = null;
         hoveredOriginalMat = null;
     }
